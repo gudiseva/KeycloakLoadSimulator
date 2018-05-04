@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+
+        <!-- database connection properties -->
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://10.0.33.86:5432/keycloak</property>
+        <property name="hibernate.connection.username">kodiak</property>
+        <property name="hibernate.connection.password">kodiak</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+ 
+        <!-- show postgresql queries output in console -->
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.format_sql">true</property>
+        
+        <property name="current_session_context_class">thread</property>
+        <property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
+        <property name="hibernate.cache.use_second_level_cache">false</property>  
+        <property name="hibernate.generate_statistics">true</property>
+        <property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+        <property name="hibernate.jdbc.lob.non_contextual_creation">true</property>
+        <property name="hibernate.jdbc.batch_size">50</property>
+
+        <!-- manage automatic database creation -->
+        <!-- <property name="hibernate.hbm2ddl.auto">create-drop</property> -->
+        <!-- Supported values include 'create', 'create-drop', 'update', 'none' and 'validate' -->
+        <property name="hibernate.hbm2ddl.auto">update</property>
+
+        <!-- dbcp connection pool configuration -->
+        <property name="hibernate.dbcp.initialSize">5</property>
+        <property name="hibernate.dbcp.maxTotal">20</property>
+        <property name="hibernate.dbcp.maxIdle">10</property>
+        <property name="hibernate.dbcp.minIdle">5</property>
+        <property name="hibernate.dbcp.maxWaitMillis">-1</property>
+
+        <!-- add annotated resources here -->
+        <!-- <mapping class="com.kodiak.models.Titanic"/> -->
+        <mapping resource="titanic.hbm.xml" />
+
+    </session-factory>
+</hibernate-configuration>

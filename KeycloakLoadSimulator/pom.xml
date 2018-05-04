@@ -1,0 +1,651 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  
+  <modelVersion>4.0.0</modelVersion>
+  
+  <groupId>com.kodiak</groupId>
+  <artifactId>KeycloakLoadSimulator</artifactId>
+  <version>1.0</version>
+  <packaging>jar</packaging>
+  
+  <name>KeycloakLoadSimulator</name>
+  <description>Keycloak Load Simulator for PostgreSQL-BDR</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>1.8</java.version>
+    <logback.version>1.1.7</logback.version>
+    <slf4j.version>1.7.21</slf4j.version>
+    <junit.version>4.12</junit.version>
+    <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+    <hibernate.version>5.2.3.Final</hibernate.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+	    <groupId>org.slf4j</groupId>
+	    <artifactId>slf4j-log4j12</artifactId>
+	    <version>${slf4j.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-api</artifactId>
+		<version>${slf4j.version}</version>
+	</dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+	<dependency>
+	    <groupId>org.hibernate</groupId>
+	    <artifactId>hibernate-core</artifactId>
+	    <version>${hibernate.version}</version>
+	</dependency>
+	<dependency>
+	    <groupId>org.hibernate</groupId>
+	    <artifactId>hibernate-entitymanager</artifactId>
+	    <version>${hibernate.version}</version>
+	</dependency>
+    <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-dbcp2</artifactId>
+        <version>2.1.1</version>
+    </dependency>	
+	<dependency>
+	    <groupId>org.postgresql</groupId>
+	    <artifactId>postgresql</artifactId>
+	    <version>9.4.1212</version>
+	</dependency>	
+    <dependency>
+	    <groupId>commons-lang</groupId>
+	    <artifactId>commons-lang</artifactId>
+	    <version>2.6</version>
+	</dependency>
+	<dependency>
+	    <groupId>commons-io</groupId>
+	    <artifactId>commons-io</artifactId>
+	    <version>2.5</version>
+	</dependency>		
+    <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+    </dependency>
+    <dependency>
+     <groupId>com.opencsv</groupId>
+     <artifactId>opencsv</artifactId>
+     <version>4.0</version>
+  	</dependency>
+  	<dependency>
+	    <groupId>org.mapdb</groupId>
+	    <artifactId>mapdb</artifactId>
+	    <version>3.0.5</version>
+	</dependency>
+  </dependencies>
+  
+  <build>
+    <plugins>
+      <!-- Set a compiler level -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <compilerArgs>
+            <arg>-verbose</arg>
+            <arg>-Xlint:all,-options,-path</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>	  
+    </plugins>
+  </build>
+
+  <profiles>
+
+	  <profile>
+		<id>simulator</id>  
+	  <build>
+	    <plugins>
+	  		<!-- download source code in Eclipse, best practice -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.10</version>
+				<configuration>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>false</downloadJavadocs>
+				</configuration>
+			</plugin>
+	    
+	      <!-- Set a compiler level -->
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-compiler-plugin</artifactId>
+	        <version>${maven-compiler-plugin.version}</version>
+	        <configuration>
+	          <source>${java.version}</source>
+	          <target>${java.version}</target>
+	          <compilerArgs>
+	            <arg>-verbose</arg>
+	            <arg>-Xlint:all,-options,-path</arg>
+	          </compilerArgs>
+	        </configuration>
+	      </plugin>
+	   
+		  	<!-- Maven Shade Plugin -->
+			<plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-shade-plugin</artifactId>
+			  <version>2.4.3</version>
+			  <executions>
+			     <!-- Run shade goal on package phase -->
+			    <execution>
+				<phase>package</phase>
+				<goals>
+					<goal>shade</goal>
+				</goals>
+				<configuration>
+					<filters>
+					    <filter>
+		                  <artifact>junit:junit</artifact>
+		                  <includes>
+		                    <include>junit/framework/**</include>
+		                    <include>org/junit/**</include>
+		                  </includes>
+		                  <excludes>
+		                    <exclude>org/junit/experimental/**</exclude>
+		                    <exclude>org/junit/runners/**</exclude>
+		                  </excludes>
+		                </filter>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>META-INF/*.SF</exclude>
+								<exclude>META-INF/*.DSA</exclude>
+								<exclude>META-INF/*.RSA</exclude>
+							</excludes>
+						</filter>
+					</filters>
+				  <transformers>
+				    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+					<!-- add Main-Class to manifest file -->
+		            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+						<mainClass>com.kodiak.main.Simulator</mainClass>
+					</transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>config.properties</resource>
+		                <file>config.properties</file>
+		            </transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>log4j.properties</resource>
+		                <file>log4j.properties</file>
+		            </transformer>
+				  </transformers>
+				</configuration>
+			    </execution>
+			  </executions>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<configuration>
+					<tasks>
+						<copy file="target/${project.name}-${project.version}.jar" tofile="${project.basedir}/deploy/simulator.jar"/>
+					</tasks>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>	   
+	    </plugins>
+	  </build>
+	</profile>
+  
+	  <profile>
+		<id>insert</id>  
+	  <build>
+	    <plugins>
+	  		<!-- download source code in Eclipse, best practice -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.10</version>
+				<configuration>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>false</downloadJavadocs>
+				</configuration>
+			</plugin>
+	    
+	      <!-- Set a compiler level -->
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-compiler-plugin</artifactId>
+	        <version>${maven-compiler-plugin.version}</version>
+	        <configuration>
+	          <source>${java.version}</source>
+	          <target>${java.version}</target>
+	          <compilerArgs>
+	            <arg>-verbose</arg>
+	            <arg>-Xlint:all,-options,-path</arg>
+	          </compilerArgs>
+	        </configuration>
+	      </plugin>
+	   
+		  	<!-- Maven Shade Plugin -->
+			<plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-shade-plugin</artifactId>
+			  <version>2.4.3</version>
+			  <executions>
+			     <!-- Run shade goal on package phase -->
+			    <execution>
+				<phase>package</phase>
+				<goals>
+					<goal>shade</goal>
+				</goals>
+				<configuration>
+					<filters>
+					    <filter>
+		                  <artifact>junit:junit</artifact>
+		                  <includes>
+		                    <include>junit/framework/**</include>
+		                    <include>org/junit/**</include>
+		                  </includes>
+		                  <excludes>
+		                    <exclude>org/junit/experimental/**</exclude>
+		                    <exclude>org/junit/runners/**</exclude>
+		                  </excludes>
+		                </filter>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>META-INF/*.SF</exclude>
+								<exclude>META-INF/*.DSA</exclude>
+								<exclude>META-INF/*.RSA</exclude>
+							</excludes>
+						</filter>
+					</filters>
+				  <transformers>
+				    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+					<!-- add Main-Class to manifest file -->
+		            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+						<mainClass>com.kodiak.hibernate.TitanicInsert</mainClass>
+					</transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>config.properties</resource>
+		                <file>config.properties</file>
+		            </transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>log4j.properties</resource>
+		                <file>log4j.properties</file>
+		            </transformer>
+				  </transformers>
+				</configuration>
+			    </execution>
+			  </executions>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<configuration>
+					<tasks>
+						<copy file="target/${project.name}-${project.version}.jar" tofile="${project.basedir}/deploy/insert.jar"/>
+					</tasks>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>	   
+	    </plugins>
+	  </build>
+	</profile>
+
+	  <profile>
+		<id>update</id>  
+	  <build>
+	    <plugins>
+	  		<!-- download source code in Eclipse, best practice -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.10</version>
+				<configuration>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>false</downloadJavadocs>
+				</configuration>
+			</plugin>
+	    
+	      <!-- Set a compiler level -->
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-compiler-plugin</artifactId>
+	        <version>${maven-compiler-plugin.version}</version>
+	        <configuration>
+	          <source>${java.version}</source>
+	          <target>${java.version}</target>
+	          <compilerArgs>
+	            <arg>-verbose</arg>
+	            <arg>-Xlint:all,-options,-path</arg>
+	          </compilerArgs>
+	        </configuration>
+	      </plugin>
+	   
+		  	<!-- Maven Shade Plugin -->
+			<plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-shade-plugin</artifactId>
+			  <version>2.4.3</version>
+			  <executions>
+			     <!-- Run shade goal on package phase -->
+			    <execution>
+				<phase>package</phase>
+				<goals>
+					<goal>shade</goal>
+				</goals>
+				<configuration>
+					<filters>
+					    <filter>
+		                  <artifact>junit:junit</artifact>
+		                  <includes>
+		                    <include>junit/framework/**</include>
+		                    <include>org/junit/**</include>
+		                  </includes>
+		                  <excludes>
+		                    <exclude>org/junit/experimental/**</exclude>
+		                    <exclude>org/junit/runners/**</exclude>
+		                  </excludes>
+		                </filter>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>META-INF/*.SF</exclude>
+								<exclude>META-INF/*.DSA</exclude>
+								<exclude>META-INF/*.RSA</exclude>
+							</excludes>
+						</filter>
+					</filters>
+				  <transformers>
+				    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+					<!-- add Main-Class to manifest file -->
+		            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+						<mainClass>com.kodiak.hibernate.TitanicUpdate</mainClass>
+					</transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>config.properties</resource>
+		                <file>config.properties</file>
+		            </transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>log4j.properties</resource>
+		                <file>log4j.properties</file>
+		            </transformer>
+				  </transformers>
+				</configuration>
+			    </execution>
+			  </executions>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<configuration>
+					<tasks>
+						<copy file="target/${project.name}-${project.version}.jar" tofile="${project.basedir}/deploy/update.jar"/>
+					</tasks>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>	   
+	    </plugins>
+	  </build>
+	</profile>
+
+	  <profile>
+		<id>delete</id>  
+	  <build>
+	    <plugins>
+	  		<!-- download source code in Eclipse, best practice -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.10</version>
+				<configuration>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>false</downloadJavadocs>
+				</configuration>
+			</plugin>
+	    
+	      <!-- Set a compiler level -->
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-compiler-plugin</artifactId>
+	        <version>${maven-compiler-plugin.version}</version>
+	        <configuration>
+	          <source>${java.version}</source>
+	          <target>${java.version}</target>
+	          <compilerArgs>
+	            <arg>-verbose</arg>
+	            <arg>-Xlint:all,-options,-path</arg>
+	          </compilerArgs>
+	        </configuration>
+	      </plugin>
+	   
+		  	<!-- Maven Shade Plugin -->
+			<plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-shade-plugin</artifactId>
+			  <version>2.4.3</version>
+			  <executions>
+			     <!-- Run shade goal on package phase -->
+			    <execution>
+				<phase>package</phase>
+				<goals>
+					<goal>shade</goal>
+				</goals>
+				<configuration>
+					<filters>
+					    <filter>
+		                  <artifact>junit:junit</artifact>
+		                  <includes>
+		                    <include>junit/framework/**</include>
+		                    <include>org/junit/**</include>
+		                  </includes>
+		                  <excludes>
+		                    <exclude>org/junit/experimental/**</exclude>
+		                    <exclude>org/junit/runners/**</exclude>
+		                  </excludes>
+		                </filter>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>META-INF/*.SF</exclude>
+								<exclude>META-INF/*.DSA</exclude>
+								<exclude>META-INF/*.RSA</exclude>
+							</excludes>
+						</filter>
+					</filters>
+				  <transformers>
+				    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+					<!-- add Main-Class to manifest file -->
+		            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+						<mainClass>com.kodiak.hibernate.TitanicDelete</mainClass>
+					</transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>config.properties</resource>
+		                <file>config.properties</file>
+		            </transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>log4j.properties</resource>
+		                <file>log4j.properties</file>
+		            </transformer>
+				  </transformers>
+				</configuration>
+			    </execution>
+			  </executions>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<configuration>
+					<tasks>
+						<copy file="target/${project.name}-${project.version}.jar" tofile="${project.basedir}/deploy/delete.jar"/>
+					</tasks>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>	   
+	    </plugins>
+	  </build>
+	</profile>
+
+	  <profile>
+		<id>read</id>  
+	  <build>
+	    <plugins>
+	  		<!-- download source code in Eclipse, best practice -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.10</version>
+				<configuration>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>false</downloadJavadocs>
+				</configuration>
+			</plugin>
+	    
+	      <!-- Set a compiler level -->
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-compiler-plugin</artifactId>
+	        <version>${maven-compiler-plugin.version}</version>
+	        <configuration>
+	          <source>${java.version}</source>
+	          <target>${java.version}</target>
+	          <compilerArgs>
+	            <arg>-verbose</arg>
+	            <arg>-Xlint:all,-options,-path</arg>
+	          </compilerArgs>
+	        </configuration>
+	      </plugin>
+	   
+		  	<!-- Maven Shade Plugin -->
+			<plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-shade-plugin</artifactId>
+			  <version>2.4.3</version>
+			  <executions>
+			     <!-- Run shade goal on package phase -->
+			    <execution>
+				<phase>package</phase>
+				<goals>
+					<goal>shade</goal>
+				</goals>
+				<configuration>
+					<filters>
+					    <filter>
+		                  <artifact>junit:junit</artifact>
+		                  <includes>
+		                    <include>junit/framework/**</include>
+		                    <include>org/junit/**</include>
+		                  </includes>
+		                  <excludes>
+		                    <exclude>org/junit/experimental/**</exclude>
+		                    <exclude>org/junit/runners/**</exclude>
+		                  </excludes>
+		                </filter>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<exclude>META-INF/*.SF</exclude>
+								<exclude>META-INF/*.DSA</exclude>
+								<exclude>META-INF/*.RSA</exclude>
+							</excludes>
+						</filter>
+					</filters>
+				  <transformers>
+				    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+					<!-- add Main-Class to manifest file -->
+		            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+						<mainClass>com.kodiak.hibernate.TitanicRead</mainClass>
+					</transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>config.properties</resource>
+		                <file>config.properties</file>
+		            </transformer>
+					<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+		                <resource>log4j.properties</resource>
+		                <file>log4j.properties</file>
+		            </transformer>
+				  </transformers>
+				</configuration>
+			    </execution>
+			  </executions>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<configuration>
+					<tasks>
+						<copy file="target/${project.name}-${project.version}.jar" tofile="${project.basedir}/deploy/read.jar"/>
+					</tasks>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>	   
+	    </plugins>
+	  </build>
+	</profile>
+
+  </profiles>
+
+    <repositories>
+		<repository>
+			<id>maven2-repository.java.net</id>
+			<name>Java.net Repository for Maven</name>
+			<url>http://download.java.net/maven/2/</url>
+			<layout>default</layout>
+		</repository>
+		   <repository>
+		       <id>sonatype-snapshots</id>
+		       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</repository>
+	    <repository>
+	        <id>JBoss</id>
+	        <name>JBoss Repsitory</name>
+	        <layout>default</layout>
+	        <url>http://repository.jboss.org/maven2</url>
+	     </repository>	    
+	</repositories>
+
+
+  
+</project>
